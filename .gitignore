@@ -1,0 +1,167 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+.venv
+env.bak/
+venv.bak/
+
+# IDE - PyCharm
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+.history/
+
+# IDE - Eclipse
+.project
+.pydevproject
+.settings/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Testing
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage/
+.hypothesis/
+
+# Documentation
+docs/_build/
+docs/build/
+docs/source/_build/
+
+# Application specific
+*.log
+logs/
+*.log.*
+*.pid
+*.seed
+*.pid.lock
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Config files
+config.ini
+settings.json
+*.conf
+!example.config.ini
+!default.settings.json
+
+# Credentials
+credentials.json
+client_secrets.json
+token.json
+*.key
+*.pem
+*.crt
+
+# Application data
+data/
+!data/.gitkeep
+resources/data/proxies.txt
+resources/data/comments.txt
+resources/data/cookies/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.directory
+
+# Qt specific
+*.qmlc
+*.jsc
+*.qrc~
+*.ui~
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# Selenium
+geckodriver.log
+chromedriver.log
+*.har
+
+# Distribution
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Cache
+.mypy_cache/
+.pytype/
+.pyre/
+.dmypy.json
+dmypy.json
+
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Project specific
+bot_config.yaml
+user_agents.txt
+browser_profiles/
+output/
+recordings/
+screenshots/
+templates/
+temp/
+
+# Keep these files
+!.gitkeep
+!resources/config/default.json
+!resources/data/example.comments.txt
+!resources/data/example.proxies.txt
