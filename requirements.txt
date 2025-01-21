@@ -64,3 +64,4 @@ numpy==1.26.3   # For numerical operations
 pandas==2.1.4   # For data analysis
 beautifulsoup4==4.12.2  # For HTML parsing
 lxml==5.0.0     # For XML/HTML processing
+emoji==2.8.0

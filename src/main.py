@@ -17,7 +17,7 @@ from . import get_logger, setup_logging, __version__
 from .core.config import Config, load_config
 from .core.task_manager import TaskManager
 from .gui.main_window import MainWindow
-from .utils.helpers import setup_crash_handler, setup_exception_logging
+from .utils import helpers  # Import the helpers module directly
 
 logger = get_logger()
 
@@ -143,8 +143,7 @@ def main() -> int:
         setup_logging(log_level)
 
         # Setup crash handling
-        setup_crash_handler()
-        setup_exception_logging()
+        helpers.setup_crash_handler()  # Use the correct import
 
         logger.info(f"Starting YouTube Live Comment Bot v{__version__}")
 
