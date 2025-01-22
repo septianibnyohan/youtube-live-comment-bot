@@ -13,11 +13,12 @@ from typing import Optional
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtCore import Qt
 
-from . import get_logger, setup_logging, __version__
-from .core.config import Config, load_config
-from .core.task_manager import TaskManager
-from .gui.main_window import MainWindow
-from .utils import helpers  # Import the helpers module directly
+# Change relative imports to absolute imports
+from youtube_bot import get_logger, setup_logging, __version__
+from youtube_bot.core.config import Config, load_config
+from youtube_bot.core.task_manager import TaskManager
+from youtube_bot.gui.main_window import MainWindow
+from youtube_bot.utils import helpers
 
 logger = get_logger()
 
@@ -53,10 +54,7 @@ def parse_arguments():
 
 def setup_application() -> QApplication:
     """Initialize and configure the QApplication instance."""
-    # Enable high DPI scaling
-    QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
-    QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
-
+    # Create application instance
     app = QApplication(sys.argv)
     app.setApplicationName("YouTube Live Comment Bot")
     app.setApplicationVersion(__version__)

@@ -8,11 +8,11 @@ import os
 import json
 import logging
 from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 
-from ..utils.validators import validate_url, validate_proxy_string
 from . import CoreError
+from ..utils import validate_url, validate_proxy_string  # Import from utils package directly
 
 logger = logging.getLogger(__name__)
 
@@ -53,15 +53,39 @@ class BrowserConfig:
 @dataclass
 class AutomationConfig:
     """Automation behavior configuration."""
+    # Existing attributes
     watch_duration_min: int = 30
     watch_duration_max: int = 300
-    comment_interval: int = 5
+    comment_delay: int = 5
     max_comments_per_user: int = 5
-    like_videos: bool = True
-    subscribe_channels: bool = False
+
+    # Add new attributes
+    mode_traffic: str = "browse"  # browse, keyword, channel, playlist
+    keywords: List[str] = field(default_factory=list)
+    thread_count: int = 1
+    view_count: int = 1
+
+    # Video behavior
+    auto_play: bool = True
+    watch_random: bool = True
     skip_ads: bool = True
     skip_ads_after: int = 5
     visit_other_videos: bool = True
+
+    # Actions
+    auto_like: bool = False
+    auto_subscribe: bool = False
+    randomize_comments: bool = True
+    use_emojis: bool = True
+    filter_duplicates: bool = True
+    browser_interval: int = 30
+
+    def __post_init__(self):
+        """Post initialization validation."""
+        if self.watch_duration_min > self.watch_duration_max:
+            raise ConfigError("Minimum watch duration cannot be greater than maximum")
+        if self.comment_delay < 1:
+            raise ConfigError("Comment delay must be at least 1 second")
 
 
 @dataclass
@@ -83,6 +107,25 @@ class Config:
     automation: AutomationConfig
     schedule: ScheduleConfig
 
+    @classmethod
+    def get_default(cls) -> 'Config':
+        """Get default configuration."""
+        return cls(
+            proxy=ProxyConfig(),
+            browser=BrowserConfig(),
+            automation=AutomationConfig(),
+            schedule=ScheduleConfig()
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert configuration to dictionary."""
+        return {
+            'proxy': asdict(self.proxy),
+            'browser': asdict(self.browser),
+            'automation': asdict(self.automation),
+            'schedule': asdict(self.schedule)
+        }
+
     def __post_init__(self):
         """Convert dict configs to dataclass instances if needed."""
         if isinstance(self.proxy, dict):
@@ -93,15 +136,6 @@ class Config:
             self.automation = AutomationConfig(**self.automation)
         if isinstance(self.schedule, dict):
             self.schedule = ScheduleConfig(**self.schedule)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert configuration to dictionary."""
-        return {
-            'proxy': asdict(self.proxy),
-            'browser': asdict(self.browser),
-            'automation': asdict(self.automation),
-            'schedule': asdict(self.schedule)
-        }
 
     def save(self, filepath: str) -> None:
         """Save configuration to file.

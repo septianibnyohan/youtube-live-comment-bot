@@ -137,14 +137,12 @@ def get_resource_path(resource: str) -> str:
 
 # Import main package components
 try:
-    from . import core
-    from . import gui
+    from .youtube_bot import gui, utils, core
     from . import browser
     from . import proxy
     from . import youtube
     from . import security
     from . import storage
-    from . import utils
 except ImportError as e:
     logger.error(f"Error importing package components: {e}")
     raise

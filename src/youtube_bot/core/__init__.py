@@ -20,7 +20,6 @@ JsonDict = Dict[str, Any]
 TaskID = str
 Timestamp = float
 
-
 class TaskStatus(Enum):
     """Enumeration of possible task states."""
     PENDING = auto()
@@ -30,14 +29,12 @@ class TaskStatus(Enum):
     FAILED = auto()
     CANCELLED = auto()
 
-
 class TaskPriority(Enum):
     """Enumeration of task priorities."""
     LOW = 0
     NORMAL = 1
     HIGH = 2
     CRITICAL = 3
-
 
 @dataclass
 class TaskConfig:
@@ -49,7 +46,6 @@ class TaskConfig:
     retry_delay: int = 60
     timeout: Optional[int] = None
 
-
 @dataclass
 class TaskResult:
     """Result of a bot task execution."""
@@ -60,7 +56,6 @@ class TaskResult:
     success: bool
     error: Optional[Exception] = None
     data: Optional[Dict[str, Any]] = None
-
 
 class TaskCallback:
     """Callback handler for task events."""
@@ -96,34 +91,30 @@ class TaskCallback:
             except Exception as e:
                 logger.error(f"Error in {event} callback: {e}")
 
-
 # Custom exceptions
 class CoreError(Exception):
     """Base exception for core module errors."""
     pass
 
-
 class TaskError(CoreError):
     """Raised when there's an error with task operations."""
     pass
-
 
 class ConfigError(CoreError):
     """Raised when there's an error with configuration."""
     pass
 
-
 class SchedulerError(CoreError):
     """Raised when there's an error with task scheduling."""
     pass
 
-
 # Import core components
 try:
-    from .task_manager import TaskManager
-    from .scheduler import Scheduler
+    from .utils import create_task_id
     from .config import Config, load_config
     from .bot import Bot, BotConfig
+    from .scheduler import Scheduler
+    from .task_manager import TaskManager
 except ImportError as e:
     logger.error(f"Error importing core components: {e}")
     raise
@@ -143,73 +134,6 @@ __all__ = [
     'CoreError',
     'TaskError',
     'ConfigError',
-    'SchedulerError'
+    'SchedulerError',
+    'create_task_id'
 ]
-
-
-# Utility functions
-def create_task_id() -> TaskID:
-    """Generate a unique task ID."""
-    from uuid import uuid4
-    return str(uuid4())
-
-
-def calculate_task_duration(start: Timestamp, end: Timestamp) -> float:
-    """Calculate the duration of a task in seconds."""
-    return end - start
-
-
-def format_duration(seconds: float) -> str:
-    """Format a duration in seconds to a human-readable string."""
-    delta = timedelta(seconds=seconds)
-    days = delta.days
-    hours = delta.seconds // 3600
-    minutes = (delta.seconds % 3600) // 60
-    seconds = delta.seconds % 60
-
-    parts = []
-    if days > 0:
-        parts.append(f"{days}d")
-    if hours > 0:
-        parts.append(f"{hours}h")
-    if minutes > 0:
-        parts.append(f"{minutes}m")
-    if seconds > 0 or not parts:
-        parts.append(f"{seconds}s")
-
-    return " ".join(parts)
-
-
-def validate_config(config: Dict[str, Any]) -> bool:
-    """Validate configuration dictionary.
-
-    Args:
-        config: Configuration dictionary to validate.
-
-    Returns:
-        bool: True if configuration is valid.
-
-    Raises:
-        ConfigError: If configuration is invalid.
-    """
-    required_fields = ['browser', 'proxy', 'scheduler']
-    for field in required_fields:
-        if field not in config:
-            raise ConfigError(f"Missing required configuration field: {field}")
-    return True
-
-
-# Module initialization code
-def initialize() -> None:
-    """Initialize the core module."""
-    logger.info("Initializing core module...")
-    # Add any necessary initialization code here
-
-
-# Clean up namespace
-del logging
-del datetime
-del timedelta
-del dataclass
-del Enum
-del auto

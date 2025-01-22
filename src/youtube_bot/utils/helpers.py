@@ -16,9 +16,85 @@ from typing import Any, List, Dict, Optional, Union, Tuple
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
+import traceback
 
 logger = logging.getLogger(__name__)
 
+
+def setup_crash_handler() -> None:
+    """Setup system-wide exception handler for crash reporting."""
+
+    def handle_exception(exc_type: type, exc_value: Exception, exc_traceback: Any) -> None:
+        """Handle uncaught exceptions.
+
+        Args:
+            exc_type: Exception type.
+            exc_value: Exception value.
+            exc_traceback: Exception traceback.
+        """
+        # Check if it's a keyboard interrupt
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+
+        # Log the full exception with traceback
+        logger.critical("Uncaught exception:",
+                        exc_info=(exc_type, exc_value, exc_traceback))
+
+        # Create crash report
+        crash_dir = Path(os.getcwd()) / 'crash_reports'
+        crash_dir.mkdir(exist_ok=True)
+
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        crash_file = crash_dir / f"crash_report_{timestamp}.txt"
+
+        try:
+            with open(crash_file, 'w', encoding='utf-8') as f:
+                f.write(f"Crash Report - {datetime.now()}\n")
+                f.write("=" * 50 + "\n\n")
+
+                # System information
+                f.write("System Information:\n")
+                f.write(f"Python Version: {platform.python_version()}\n")
+                f.write(f"OS: {platform.system()} {platform.release()}\n")
+                f.write(f"Platform: {platform.platform()}\n\n")
+
+                # Exception information
+                f.write("Exception Information:\n")
+                f.write(f"Type: {exc_type.__name__}\n")
+                f.write(f"Message: {str(exc_value)}\n\n")
+
+                # Traceback
+                f.write("Traceback:\n")
+                f.write(''.join(traceback.format_tb(exc_traceback)))
+
+                logger.info(f"Crash report saved to {crash_file}")
+
+        except Exception as e:
+            logger.error(f"Failed to write crash report: {e}")
+
+    # Set the exception handler
+    sys.excepthook = handle_exception
+
+
+def setup_exception_logging() -> None:
+    """Configure exception logging for the application."""
+    log_dir = Path(os.getcwd()) / 'logs'
+    log_dir.mkdir(exist_ok=True)
+
+    log_file = log_dir / f"exceptions_{datetime.now().strftime('%Y%m%d')}.log"
+
+    # Configure file handler for exceptions
+    handler = logging.FileHandler(log_file)
+    handler.setLevel(logging.ERROR)
+
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    handler.setFormatter(formatter)
+
+    # Add handler to root logger
+    logging.getLogger().addHandler(handler)
 
 def generate_random_string(length: int = 10, include_digits: bool = True) -> str:
     """Generate a random string of specified length.
