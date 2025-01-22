@@ -14,6 +14,7 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QIcon, QCloseEvent
 
 from ..core import TaskManager, TaskStatus
+from ..core.task_manager import TaskPriority
 from ..core.config import Config
 from .settings_tab import SettingsTab
 from .browser_tab import BrowserTab
@@ -143,9 +144,9 @@ class MainWindow(QMainWindow):
             # Get configuration from tabs
             config = self._collect_config()
 
-            # Create new task
+            # Create new task with proper TaskPriority enum
             self.current_task_id = self.task_manager.create_task(
-                priority=config.get('priority', 'NORMAL'),
+                priority=TaskPriority.NORMAL,  # Use enum instead of string
                 max_duration=config.get('max_duration'),
                 max_retries=config.get('max_retries', 3)
             )
@@ -155,8 +156,11 @@ class MainWindow(QMainWindow):
             self.stop_button.setEnabled(True)
             self.status_label.setText("Starting...")
 
-            # Log action
             logger.info("Started new task with ID: %s", self.current_task_id)
+
+        except Exception as e:
+            self.logs_tab.log_error(f"Failed to start task: {e}")
+            self.status_bar.show_error("Failed to start task")
 
         except Exception as e:
             self.logs_tab.log_error(f"Failed to start task: {e}")

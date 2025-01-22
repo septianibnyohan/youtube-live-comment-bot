@@ -29,7 +29,7 @@ class LogsTab(QWidget):
         """Initialize logs tab."""
         super().__init__()
         self.task_manager = task_manager
-        self.max_lines = 1000  # Maximum number of log lines to display
+        self.max_lines = 1000
         self._setup_ui()
         self._setup_log_handler()
         self._setup_connections()
@@ -152,9 +152,10 @@ class LogsTab(QWidget):
         """Setup custom log handler for the display."""
 
         class QTextEditHandler(logging.Handler):
-            def __init__(self, widget):
+            def __init__(self, widget, logs_tab):
                 super().__init__()
                 self.widget = widget
+                self.logs_tab = logs_tab
                 self.log_formats = {
                     logging.DEBUG: ('gray', 'Debug'),
                     logging.INFO: ('black', 'Info'),
@@ -170,11 +171,10 @@ class LogsTab(QWidget):
                 )
 
                 # Create timestamp
-                timestamp = datetime.datetime.fromtimestamp(record.created)
-                time_str = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
                 # Format message
-                msg = f"[{time_str}] [{level_name}] {record.getMessage()}"
+                msg = f"[{timestamp}] [{level_name}] {record.getMessage()}"
 
                 # Create text format with color
                 fmt = QTextCharFormat()
@@ -186,23 +186,26 @@ class LogsTab(QWidget):
                 cursor.insertText(msg + '\n', fmt)
 
                 # Auto-scroll if enabled
-                if self.widget.parent().auto_scroll.isChecked():
+                if self.logs_tab.auto_scroll.isChecked():
                     cursor.movePosition(QTextCursor.MoveOperation.End)
                     self.widget.setTextCursor(cursor)
 
                 # Limit number of lines
-                self._limit_lines()
+                self.limit_lines()
 
-            def _limit_lines(self):
+            def limit_lines(self):
+                """Limit the number of lines in the log display."""
                 doc = self.widget.document()
-                while doc.lineCount() > self.widget.parent().max_lines:
+                max_lines = self.logs_tab.max_lines
+
+                while doc.lineCount() > max_lines:
                     cursor = QTextCursor(doc.firstBlock())
                     cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
                     cursor.removeSelectedText()
                     cursor.deleteChar()  # Remove newline
 
-        # Create and set handler
-        self.log_handler = QTextEditHandler(self.log_display)
+        # Create and set handler with reference to this LogsTab instance
+        self.log_handler = QTextEditHandler(self.log_display, self)
         self.log_handler.setLevel(logging.INFO)
         logger.addHandler(self.log_handler)
 

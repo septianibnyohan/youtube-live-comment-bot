@@ -7,7 +7,7 @@ This module handles loading, validating, and managing application configuration.
 import os
 import json
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
 
@@ -25,41 +25,236 @@ class ConfigError(CoreError):
 @dataclass
 class ProxyConfig:
     """Proxy configuration settings."""
+    # Basic settings
     enabled: bool = False
     type: str = "http"
     host: str = ""
     port: int = 0
     username: Optional[str] = None
     password: Optional[str] = None
-    check_ip: bool = True
-    check_score: bool = True
+
+    # Proxy list
+    proxy_list: List[str] = field(default_factory=list)
+
+    # Verification settings
+    check_whoer: bool = True
+    check_residential: bool = True
+    check_timeout: bool = True
     min_score: int = 70
+    timeout: int = 10
+
+    # Rotation settings
+    enable_rotation: bool = False
     rotation_interval: int = 300  # seconds
+
+    def __post_init__(self):
+        """Post initialization validation."""
+        # Validate proxy type
+        valid_types = ["http", "https", "socks4", "socks5"]
+        if self.type not in valid_types:
+            raise ConfigError(f"Invalid proxy type. Must be one of: {valid_types}")
+
+        # Validate port range
+        if self.port < 0 or self.port > 65535:
+            raise ConfigError("Port must be between 0 and 65535")
+
+        # Validate timeout
+        if self.timeout < 1:
+            raise ConfigError("Timeout must be at least 1 second")
+
+        # Validate min score
+        if not (0 <= self.min_score <= 100):
+            raise ConfigError("Minimum score must be between 0 and 100")
+
+        # Validate rotation interval
+        if self.rotation_interval < 1:
+            raise ConfigError("Rotation interval must be at least 1 second")
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert configuration to dictionary."""
+        return {
+            'enabled': self.enabled,
+            'type': self.type,
+            'host': self.host,
+            'port': self.port,
+            'username': self.username,
+            'password': self.password,
+            'proxy_list': self.proxy_list,
+            'check_whoer': self.check_whoer,
+            'check_residential': self.check_residential,
+            'check_timeout': self.check_timeout,
+            'min_score': self.min_score,
+            'timeout': self.timeout,
+            'enable_rotation': self.enable_rotation,
+            'rotation_interval': self.rotation_interval
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ProxyConfig':
+        """Create configuration from dictionary."""
+        return cls(
+            enabled=data.get('enabled', False),
+            type=data.get('type', 'http'),
+            host=data.get('host', ''),
+            port=data.get('port', 0),
+            username=data.get('username'),
+            password=data.get('password'),
+            proxy_list=data.get('proxy_list', []),
+            check_whoer=data.get('check_whoer', True),
+            check_residential=data.get('check_residential', True),
+            check_timeout=data.get('check_timeout', True),
+            min_score=data.get('min_score', 70),
+            timeout=data.get('timeout', 10),
+            enable_rotation=data.get('enable_rotation', False),
+            rotation_interval=data.get('rotation_interval', 300)
+        )
+
+    def get_proxy_string(self) -> Optional[str]:
+        """Get proxy string in format protocol://username:password@host:port.
+
+        Returns:
+            str: Formatted proxy string or None if proxy not configured.
+        """
+        if not self.enabled or not self.host or not self.port:
+            return None
+
+        auth = f"{self.username}:{self.password}@" if self.username and self.password else ""
+        return f"{self.type}://{auth}{self.host}:{self.port}"
 
 
 @dataclass
 class BrowserConfig:
     """Browser configuration settings."""
+    # Browser type and path
     type: str = "chrome"
+    executable_path: Optional[str] = None
     headless: bool = False
+
+    # Connection settings
+    connection_type: str = "direct"  # direct, proxy, vpn
+
+    # User agent and fingerprint
     user_agent: Optional[str] = None
-    use_fingerprint: bool = True
+    use_fingerprint: bool = False
+    randomize_fingerprint: bool = False
+
+    # Device settings
+    device_type: str = "desktop"  # desktop, mobile, random
+    screen_size: Optional[Tuple[int, int]] = None
+
+    # Cookie and history settings
+    use_cookies: bool = True
     clear_cookies: bool = True
     clear_history: bool = True
-    timeout: int = 30
+    cookie_file: Optional[str] = None
+
+    # Browser behavior
     page_load_timeout: int = 30
+    block_images: bool = False
+    block_javascript: bool = False
+
+    # Video playback settings
+    video_quality: str = "auto"
+    autoplay: bool = True
+    start_muted: bool = False
+    show_annotations: bool = False
+
+    def __post_init__(self):
+        """Post initialization validation."""
+        # Validate browser type
+        valid_browsers = ["chrome", "firefox", "edge"]
+        if self.type not in valid_browsers:
+            raise ConfigError(f"Invalid browser type. Must be one of: {valid_browsers}")
+
+        # Validate connection type
+        valid_connections = ["direct", "proxy", "vpn"]
+        if self.connection_type not in valid_connections:
+            raise ConfigError(f"Invalid connection type. Must be one of: {valid_connections}")
+
+        # Validate device type
+        valid_devices = ["desktop", "mobile", "random"]
+        if self.device_type not in valid_devices:
+            raise ConfigError(f"Invalid device type. Must be one of: {valid_devices}")
+
+        # Validate timeout
+        if self.page_load_timeout < 1:
+            raise ConfigError("Page load timeout must be at least 1 second")
+
+        # Validate screen size if provided
+        if self.screen_size:
+            width, height = self.screen_size
+            if width < 1 or height < 1:
+                raise ConfigError("Screen dimensions must be positive")
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert configuration to dictionary."""
+        return {
+            'type': self.type,
+            'executable_path': self.executable_path,
+            'headless': self.headless,
+            'connection_type': self.connection_type,
+            'user_agent': self.user_agent,
+            'use_fingerprint': self.use_fingerprint,
+            'randomize_fingerprint': self.randomize_fingerprint,
+            'device_type': self.device_type,
+            'screen_size': self.screen_size,
+            'use_cookies': self.use_cookies,
+            'clear_cookies': self.clear_cookies,
+            'clear_history': self.clear_history,
+            'cookie_file': self.cookie_file,
+            'page_load_timeout': self.page_load_timeout,
+            'block_images': self.block_images,
+            'block_javascript': self.block_javascript,
+            'video_quality': self.video_quality,
+            'autoplay': self.autoplay,
+            'start_muted': self.start_muted,
+            'show_annotations': self.show_annotations
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'BrowserConfig':
+        """Create configuration from dictionary."""
+        return cls(
+            type=data.get('type', 'chrome'),
+            executable_path=data.get('executable_path'),
+            headless=data.get('headless', False),
+            connection_type=data.get('connection_type', 'direct'),
+            user_agent=data.get('user_agent'),
+            use_fingerprint=data.get('use_fingerprint', False),
+            randomize_fingerprint=data.get('randomize_fingerprint', False),
+            device_type=data.get('device_type', 'desktop'),
+            screen_size=data.get('screen_size'),
+            use_cookies=data.get('use_cookies', True),
+            clear_cookies=data.get('clear_cookies', True),
+            clear_history=data.get('clear_history', True),
+            cookie_file=data.get('cookie_file'),
+            page_load_timeout=data.get('page_load_timeout', 30),
+            block_images=data.get('block_images', False),
+            block_javascript=data.get('block_javascript', False),
+            video_quality=data.get('video_quality', 'auto'),
+            autoplay=data.get('autoplay', True),
+            start_muted=data.get('start_muted', False),
+            show_annotations=data.get('show_annotations', False)
+        )
 
 
 @dataclass
 class AutomationConfig:
     """Automation behavior configuration."""
-    # Existing attributes
+    # Time settings
     watch_duration_min: int = 30
     watch_duration_max: int = 300
     comment_delay: int = 5
-    max_comments_per_user: int = 5
+    random_delay_min: int = 2
+    random_delay_max: int = 10
 
-    # Add new attributes
+    # Comment settings
+    max_comments_per_user: int = 5
+    randomize_comments: bool = True
+    comments: List[str] = field(default_factory=list)
+    comment_language: str = "English"
+
+    # Traffic settings
     mode_traffic: str = "browse"  # browse, keyword, channel, playlist
     keywords: List[str] = field(default_factory=list)
     thread_count: int = 1
@@ -75,17 +270,82 @@ class AutomationConfig:
     # Actions
     auto_like: bool = False
     auto_subscribe: bool = False
-    randomize_comments: bool = True
     use_emojis: bool = True
     filter_duplicates: bool = True
     browser_interval: int = 30
 
     def __post_init__(self):
         """Post initialization validation."""
+        # Validate watch duration
         if self.watch_duration_min > self.watch_duration_max:
             raise ConfigError("Minimum watch duration cannot be greater than maximum")
+
+        # Validate delays
         if self.comment_delay < 1:
             raise ConfigError("Comment delay must be at least 1 second")
+
+        if self.random_delay_min > self.random_delay_max:
+            raise ConfigError("Minimum random delay cannot be greater than maximum")
+
+        if self.random_delay_min < 0:
+            raise ConfigError("Random delay minimum cannot be negative")
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert configuration to dictionary."""
+        return {
+            'watch_duration_min': self.watch_duration_min,
+            'watch_duration_max': self.watch_duration_max,
+            'comment_delay': self.comment_delay,
+            'random_delay_min': self.random_delay_min,
+            'random_delay_max': self.random_delay_max,
+            'max_comments_per_user': self.max_comments_per_user,
+            'randomize_comments': self.randomize_comments,
+            'comments': self.comments,
+            'comment_language': self.comment_language,
+            'mode_traffic': self.mode_traffic,
+            'keywords': self.keywords,
+            'thread_count': self.thread_count,
+            'view_count': self.view_count,
+            'auto_play': self.auto_play,
+            'watch_random': self.watch_random,
+            'skip_ads': self.skip_ads,
+            'skip_ads_after': self.skip_ads_after,
+            'visit_other_videos': self.visit_other_videos,
+            'auto_like': self.auto_like,
+            'auto_subscribe': self.auto_subscribe,
+            'use_emojis': self.use_emojis,
+            'filter_duplicates': self.filter_duplicates,
+            'browser_interval': self.browser_interval
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'AutomationConfig':
+        """Create configuration from dictionary."""
+        return cls(
+            watch_duration_min=data.get('watch_duration_min', 30),
+            watch_duration_max=data.get('watch_duration_max', 300),
+            comment_delay=data.get('comment_delay', 5),
+            random_delay_min=data.get('random_delay_min', 2),
+            random_delay_max=data.get('random_delay_max', 10),
+            max_comments_per_user=data.get('max_comments_per_user', 5),
+            randomize_comments=data.get('randomize_comments', True),
+            comments=data.get('comments', []),
+            comment_language=data.get('comment_language', 'English'),
+            mode_traffic=data.get('mode_traffic', 'browse'),
+            keywords=data.get('keywords', []),
+            thread_count=data.get('thread_count', 1),
+            view_count=data.get('view_count', 1),
+            auto_play=data.get('auto_play', True),
+            watch_random=data.get('watch_random', True),
+            skip_ads=data.get('skip_ads', True),
+            skip_ads_after=data.get('skip_ads_after', 5),
+            visit_other_videos=data.get('visit_other_videos', True),
+            auto_like=data.get('auto_like', False),
+            auto_subscribe=data.get('auto_subscribe', False),
+            use_emojis=data.get('use_emojis', True),
+            filter_duplicates=data.get('filter_duplicates', True),
+            browser_interval=data.get('browser_interval', 30)
+        )
 
 
 @dataclass

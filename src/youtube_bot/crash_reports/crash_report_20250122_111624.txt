@@ -1,0 +1,31 @@
+Crash Report - 2025-01-22 11:16:24.533815
+==================================================
+
+System Information:
+Python Version: 3.9.13
+OS: Windows 10
+Platform: Windows-10-10.0.22631-SP0
+
+Exception Information:
+Type: AttributeError
+Message: 'QTextEditHandler' object has no attribute '_limit_lines'
+
+Traceback:
+  File "C:\Data\Project\python\youtube-live-comment\src\youtube_bot\gui\main_window.py", line 161, in _on_start_clicked
+    self.logs_tab.log_error(f"Failed to start task: {e}")
+  File "C:\Data\Project\python\youtube-live-comment\src\youtube_bot\gui\logs_tab.py", line 291, in log_error
+    self.log_message("ERROR", message)
+  File "C:\Data\Project\python\youtube-live-comment\src\youtube_bot\gui\logs_tab.py", line 283, in log_message
+    logger.log(numeric_level, message)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 1512, in log
+    self._log(level, msg, args, **kwargs)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 1589, in _log
+    self.handle(record)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 1599, in handle
+    self.callHandlers(record)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 1661, in callHandlers
+    hdlr.handle(record)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 952, in handle
+    self.emit(record)
+  File "C:\Data\Project\python\youtube-live-comment\src\youtube_bot\gui\logs_tab.py", line 195, in emit
+    self._limit_lines()

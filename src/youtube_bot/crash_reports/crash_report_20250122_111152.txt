@@ -1,0 +1,31 @@
+Crash Report - 2025-01-22 11:11:52.012410
+==================================================
+
+System Information:
+Python Version: 3.9.13
+OS: Windows 10
+Platform: Windows-10-10.0.22631-SP0
+
+Exception Information:
+Type: AttributeError
+Message: 'QGroupBox' object has no attribute 'auto_scroll'
+
+Traceback:
+  File "C:\Data\Project\python\youtube-live-comment\src\youtube_bot\gui\main_window.py", line 162, in _on_start_clicked
+    self.logs_tab.log_error(f"Failed to start task: {e}")
+  File "C:\Data\Project\python\youtube-live-comment\src\youtube_bot\gui\logs_tab.py", line 298, in log_error
+    self.log_message("ERROR", message)
+  File "C:\Data\Project\python\youtube-live-comment\src\youtube_bot\gui\logs_tab.py", line 290, in log_message
+    logger.log(numeric_level, message)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 1512, in log
+    self._log(level, msg, args, **kwargs)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 1589, in _log
+    self.handle(record)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 1599, in handle
+    self.callHandlers(record)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 1661, in callHandlers
+    hdlr.handle(record)
+  File "C:\Users\ideku\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py", line 952, in handle
+    self.emit(record)
+  File "C:\Data\Project\python\youtube-live-comment\src\youtube_bot\gui\logs_tab.py", line 189, in emit
+    if self.widget.parent().auto_scroll.isChecked():
